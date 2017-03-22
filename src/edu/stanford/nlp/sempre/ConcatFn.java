@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 public class ConcatFn extends SemanticFn {
   String delim;
   boolean reverse;
+  boolean append;
 
   public ConcatFn() { }
 
@@ -21,9 +22,12 @@ public class ConcatFn extends SemanticFn {
   public void init(LispTree tree) {
     super.init(tree);
     if (tree.children.size() > 2) {
-      if (!tree.child(1).value.equals("reverse"))
+      if (!tree.child(1).value.equals("reverse") && !tree.child(1).value.equals("append"))
         throw new RuntimeException("Illegal ConcatFn option " + tree.child(1).value);
-      reverse = true;
+      if (tree.child(1).value.equals("reverse"))
+        reverse = true;
+      else if (tree.child(1).value.equals("append"))
+        append = true;
       delim = tree.child(2).value;
     } else {
       delim = tree.child(1).value;
@@ -56,6 +60,9 @@ public class ConcatFn extends SemanticFn {
           }
           out.append(s);
         }
+        if (append)
+          out.append(delim);
+        
         return new Derivation.Builder()
             .withCallable(c)
             .withStringFormulaFrom(out.toString())
