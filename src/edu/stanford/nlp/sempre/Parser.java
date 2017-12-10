@@ -56,6 +56,9 @@ public abstract class Parser {
 
     @Option(gloss = "Dump all features (for debugging)")
     public boolean dumpAllFeatures = false;
+
+    @Option(gloss = "Call SetEvaluation during parsing")
+    public boolean callSetEvaluation = true;
   }
 
   public static final Options opts = new Options();
@@ -88,7 +91,7 @@ public abstract class Parser {
   public List<Rule> getCatUnaryRules() { return catUnaryRules; }
 
   // TODO(joberant): move this to a separate class in charge of visualizing charts
-  PrintWriter chartFillOut = null;  // For printing a machine-readable json file
+  public PrintWriter chartFillOut = null;  // For printing a machine-readable json file
 
   public Parser(Spec spec) {
     this.grammar = spec.grammar;
@@ -97,8 +100,8 @@ public abstract class Parser {
     this.valueEvaluator = spec.valueEvaluator;
 
     computeCatUnaryRules();
-    LogInfo.logs("Parser: %d catUnaryRules (sorted), %d nonCatUnaryRules (in trie)",
-        catUnaryRules.size(), grammar.rules.size() - catUnaryRules.size());
+    LogInfo.logs("%s: %d catUnaryRules (sorted), %d nonCatUnaryRules (in trie)",
+        this.getClass().getSimpleName(), catUnaryRules.size(), grammar.rules.size() - catUnaryRules.size());
   }
 
   // If grammar changes, then we might need to update aspects of the parser.
@@ -174,9 +177,10 @@ public abstract class Parser {
     Derivation.sortByScore(ex.predDerivations);
 
     // Evaluate
-    ex.evaluation = new Evaluation();
-    addToEvaluation(state, ex.evaluation);
-
+    if (opts.callSetEvaluation) {
+      ex.evaluation = new Evaluation();
+      addToEvaluation(state, ex.evaluation);
+    }
     // Clean up temporary state used during parsing
     ex.clearTempState();
     for (Derivation deriv : ex.predDerivations)
@@ -206,6 +210,7 @@ public abstract class Parser {
     int correctIndexAfterParse = -1;
     double maxCompatibility = 0.0;
     double[] compatibilities = null;
+    int numCorrect = 0, numPartialCorrect = 0, numIncorrect = 0;
 
     if (ex.targetValue != null) {
       compatibilities = new double[numCandidates];
@@ -217,6 +222,14 @@ public abstract class Parser {
           correctIndex = i;
         // record maximum compatibility for partial oracle
         maxCompatibility = Math.max(compatibilities[i], maxCompatibility);
+        // Count
+        if (compatibilities[i] == 1) {
+          numCorrect++;
+        } else if (compatibilities[i] == 0) {
+          numIncorrect++;
+        } else {
+          numPartialCorrect++;
+        }
       }
       // What if we only had parsed bottom up?
       for (int i = 0; i < numCandidates; i++) {
@@ -330,6 +343,9 @@ public abstract class Parser {
     evaluation.add("numCandidates", numCandidates);  // From this parse
     if (numCandidates > 0)
       evaluation.add("parsedNumCandidates", numCandidates);
+    evaluation.add("numCorrect", numCorrect);
+    evaluation.add("numPartialCorrect", numPartialCorrect);
+    evaluation.add("numIncorrect", numIncorrect);
 
     // Add parsing stats
     evaluation.add(state.evaluation);

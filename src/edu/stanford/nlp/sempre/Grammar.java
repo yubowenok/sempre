@@ -35,6 +35,8 @@ public class Grammar {
     @Option(gloss = "Variables which are used to interpret the grammar file")
     public List<String> tags = new ArrayList<>();
     @Option public boolean binarizeRules = true;
+    @Option(gloss = "Specifiy which ApplyFn to use: defaults to JoinFn when null")
+    public String useApplyFn = null;
   }
 
   public static Options opts = new Options();
@@ -42,7 +44,7 @@ public class Grammar {
   // All the rules in the grammar.  Each parser can read these and transform
   // them however the parser wishes.
   // This contains binarized rules
-  ArrayList<Rule> rules = new ArrayList<>();
+  protected ArrayList<Rule> rules = new ArrayList<>();
   public List<Rule> getRules() { return rules; }
 
   Map<String, LispTree> macros = new HashMap<>();  // Map from macro name to its replacement value
@@ -258,7 +260,7 @@ public class Grammar {
     return cat;
   }
 
-  private void interpretRule(LispTree tree) {
+  protected void interpretRule(LispTree tree) {
     if (tree.children.size() < 4)
       throw new RuntimeException("Invalid rule: " + tree);
 
@@ -358,13 +360,16 @@ public class Grammar {
 
   // Generate intermediate categories for binarization.
   public static final String INTERMEDIATE_PREFIX = "$Intermediate";
-  private int freshCatIndex = 0;
+  protected int freshCatIndex = 0;
   private String generateFreshCat() {
     freshCatIndex++;
     return INTERMEDIATE_PREFIX + freshCatIndex;
   }
   public static boolean isIntermediate(String cat) {
     return cat.startsWith(INTERMEDIATE_PREFIX);
+  }
+  public int getFreshCatIndex() {
+    return freshCatIndex;
   }
 
   // Create multiple versions of this rule if there are optional RHS.
@@ -524,13 +529,20 @@ public class Grammar {
 
     String name = tree.child(0).value;
 
-    // Syntactic sugar: (lambda x (var x)) => (JoinFn betaReduce forward (arg0 (lambda x (var x))))
+    // Syntactic sugar: (lambda x (f (var x))) => (useApplyFn (lambda x (f (var x))))
+    // defaults to (lambda x (var x)) => (JoinFn betaReduce forward (arg0 (lambda x (var x))))
     if (name.equals("lambda")) {
       LispTree newTree = LispTree.proto.newList();
-      newTree.addChild("JoinFn");
-      newTree.addChild("betaReduce");
-      newTree.addChild("forward");
-      newTree.addChild(LispTree.proto.newList("arg0", tree));
+
+      if (Grammar.opts.useApplyFn == null) {
+        newTree.addChild("JoinFn");
+        newTree.addChild("betaReduce");
+        newTree.addChild("forward");
+        newTree.addChild(LispTree.proto.newList("arg0", tree));
+      } else {
+        newTree.addChild(Grammar.opts.useApplyFn);
+        newTree.addChild(tree);
+      }
       tree = newTree;
       name = tree.child(0).value;
     }

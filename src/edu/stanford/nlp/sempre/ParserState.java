@@ -24,7 +24,7 @@ public abstract class ParserState {
   }
   public static Options opts = new Options();
 
-  public enum CustomExpectedCount { NONE, UNIFORM, TOP, RANDOM, }
+  public enum CustomExpectedCount { NONE, UNIFORM, TOP, TOPALT, RANDOM, }
 
   //// Input: specification of how to parse
 
@@ -137,8 +137,8 @@ public abstract class ParserState {
     if (Parser.opts.verbose >= 3) {
       LogInfo.begin_track("ParserState.pruneCell(%s): %d derivations", cellDescription, derivations.size());
       for (Derivation deriv : derivations) {
-        LogInfo.logs("%s(%s,%s): %s %s, [score=%s]", deriv.cat, deriv.start, deriv.end, deriv.formula,
-            deriv.canonicalUtterance, deriv.score);
+        LogInfo.logs("%s(%s,%s): %s %s, [score=%s] allAnchored: %s", deriv.cat, deriv.start, deriv.end, deriv.formula,
+            deriv.canonicalUtterance, deriv.score, deriv.allAnchored());
       }
       LogInfo.end_track();
     }
@@ -230,7 +230,7 @@ public abstract class ParserState {
   }
 
   // Ensure that all the logical forms are executed and compatibilities are computed.
-  protected void ensureExecuted() {
+  public void ensureExecuted() {
     LogInfo.begin_track("Parser.ensureExecuted");
     // Execute predicted derivations to get value.
     for (Derivation deriv : predDerivations) {
@@ -275,7 +275,7 @@ public abstract class ParserState {
     predScores = new double[n];
     // For update schemas that choose one good and one bad candidate to update
     int[] goodAndBad = null;
-    if (opts.customExpectedCounts == CustomExpectedCount.TOP) {
+    if (opts.customExpectedCounts == CustomExpectedCount.TOP || opts.customExpectedCounts == CustomExpectedCount.TOPALT) {
       goodAndBad = getTopDerivations(derivations);
       if (goodAndBad == null) return;
     } else if (opts.customExpectedCounts == CustomExpectedCount.RANDOM) {
@@ -299,6 +299,10 @@ public abstract class ParserState {
         case TOP: case RANDOM:
           trueScores[i] = (i == goodAndBad[0]) ? 0 : Double.NEGATIVE_INFINITY;
           predScores[i] = (i == goodAndBad[1]) ? 0 : Double.NEGATIVE_INFINITY;
+          break;
+        case TOPALT:
+          trueScores[i] = (i == goodAndBad[0]) ? 0 : Double.NEGATIVE_INFINITY;
+          predScores[i] = (i == goodAndBad[0] || i == goodAndBad[1]) ? deriv.score : Double.NEGATIVE_INFINITY;
           break;
         default:
           throw new RuntimeException("Unknown customExpectedCounts: " + opts.customExpectedCounts);

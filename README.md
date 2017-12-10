@@ -1,4 +1,4 @@
-# SEMPRE 2.1: Semantic Parsing with Execution
+# SEMPRE 2.4: Semantic Parsing with Execution
 
 ## What is semantic parsing?
 
@@ -62,6 +62,8 @@ SEMPRE has been used in the following papers:
   offshoot, and does not use many of the core learning and parsing utiltiies in
   SEMPRE.  To reproduce those results, check out SEMPRE 1.0.
 
+Please refer to the [project page](https://nlp.stanford.edu/software/sempre/) for a more complete list.
+
 ## Where do I go next?
 
 - If you're new to semantic parsing, you can learn more from the [background
@@ -82,6 +84,8 @@ You must have the following already installed on your system.
 - Ant 1.8.2
 - Ruby 1.8.7 or 1.9
 - wget
+- make (for compiling fig and Virtuoso)
+- zip (for unzip downloaded dependencies)
 
 Other dependencies will be downloaded as you need them.  SEMPRE has been tested
 on Ubuntu Linux 12.04 and MacOS X.  Your mileage will vary depending on how
@@ -106,7 +110,7 @@ similar your system is.
         ./run @mode=simple
 
     You should be able to type the following into the shell and get the answer `(number 7)`:
-   
+
         (execute (call + (number 3) (number 4)))
 
 To go further, check out the [tutorial](TUTORIAL.md) and then the [full
@@ -133,7 +137,7 @@ For Ubuntu, follow this:
     make install
     cd ..
 
-on OS/X you can install virtuoso using homebrew by following the instructions 
+on OS/X you can install virtuoso using homebrew by following the instructions
 [here](http://carsten.io/virtuoso-os-on-mac-os/)
 
 To have SEMPRE interact with Virtuoso, the required modules need to be compiled as follow:
@@ -166,3 +170,19 @@ Changes from SEMPRE 2.0 to SEMPRE 2.1:
 
 - Added the `tables` package for the paper *Compositional semantic parsing on semi-structured tables* (ACL 2015).
 - Add and `overnight` package for the paper *Building a semantic parser overnight* (ACL 2015).
+
+Changes from SEMPRE 2.1 to SEMPRE 2.2:
+
+- Added code for the paper *Inferring Logical Forms From Denotations* (ACL 2016).
+
+Changes from SEMPRE 2.2 to SEMPRE 2.3:
+
+- Added the `interactive` package for the paper *Naturalizing a programming language through interaction* (ACL 2017).
+
+Changes from SEMPRE 2.3 to SEMPRE 2.3.1:
+
+- Modified the `tables` module to resemble SEMPRE 2.1, effectively making it work again.
+
+Changes from SEMPRE 2.3.1 to SEMPRE 2.4:
+
+- Added the `cprune` package for the paper *Macro Grammars and Holistic Triggering for Efficient Semantic Parsing* (EMNLP 2017).

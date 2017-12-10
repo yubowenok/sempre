@@ -227,11 +227,11 @@ public final class TypeInference {
 
     } else if (formula instanceof AggregateFormula) {
       AggregateFormula aggregate = (AggregateFormula) formula;
-      inferType(aggregate.child, env, SemType.anyType);
+      SemType childType = inferType(aggregate.child, env, SemType.anyType);
       if (aggregate.mode == AggregateFormula.Mode.count)
         return check(SemType.numberType.meet(type));
       else
-        return check(SemType.numberOrDateType.meet(type));
+        return check(SemType.numberOrDateType.meet(type).meet(childType));
 
     } else if (formula instanceof ArithmeticFormula) {
       ArithmeticFormula arith = (ArithmeticFormula) formula;
@@ -270,6 +270,9 @@ public final class TypeInference {
       for (int i = 0; i < info.argTypes.size(); i++)
         inferType(call.args.get(i), env, info.argTypes.get(i));
       return check(type.meet(info.retType));
+    } else if (formula instanceof ActionFormula) {
+      initCallTypeInfo();
+      return SemType.anyType;
     } else {
       throw new RuntimeException("Can't infer type of formula: " + formula);
     }

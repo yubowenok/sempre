@@ -25,7 +25,7 @@
     <antcall target="compile.released"/>
   </target>
 
-  <target name="compile.released" depends="init,core,cache,corenlp,freebase,tables,overnight"/>
+  <target name="compile.released" depends="init,core,cache,corenlp,freebase,tables,cprune,overnight"/>
 
   <!-- Compile core -->
   <target name="core" depends="init">
@@ -78,6 +78,16 @@
     <jar destfile="${libsempre}/sempre-tables.jar" basedir="${classes}/tables"/>
   </target>
 
+  <!-- Compile cprune -->
+  <target name="cprune" depends="init,core,corenlp,tables">
+    <echo message="Compiling ${ant.project.name}: cprune"/>
+    <mkdir dir="${classes}/cprune"/>
+    <javac srcdir="${src}" destdir="${classes}/cprune" classpathref="lib.path" debug="true" includeantruntime="false" source="${source}" target="${target}">
+      <include name="edu/stanford/nlp/sempre/cprune/"/>
+    </javac>
+    <jar destfile="${libsempre}/sempre-cprune.jar" basedir="${classes}/cprune"/>
+  </target>
+
   <!-- Compile overnight -->
   <target name="overnight" depends="init,core">
     <echo message="Compiling ${ant.project.name}: overnight"/>
@@ -86,6 +96,16 @@
       <include name="edu/stanford/nlp/sempre/overnight/"/>
     </javac>
     <jar destfile="${libsempre}/sempre-overnight.jar" basedir="${classes}/overnight"/>
+  </target>
+
+  <!-- Compile interactive -->
+  <target name="interactive" depends="init,core">
+    <echo message="Compiling ${ant.project.name}: interactive"/>
+    <mkdir dir="${classes}/interactive"/>
+    <javac srcdir="${src}" destdir="${classes}/interactive" classpathref="lib.path" debug="true" includeantruntime="false" source="${source}" target="${target}">
+      <include name="edu/stanford/nlp/sempre/interactive/"/>
+    </javac>
+    <jar destfile="${libsempre}/sempre-interactive.jar" basedir="${classes}/interactive"/>
   </target>
 
   <!-- Compile geo880 -->
